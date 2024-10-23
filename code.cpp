@@ -8,11 +8,11 @@ using namespace std;
 
 struct Term
 {
-    double coefficient;
-    int degree;
+    double coeff;  // Changed from 'coefficient' to 'coeff'
+    int deg;       // Changed from 'degree' to 'deg'
     Term* next;
 
-    Term(double coeff, int deg) : coefficient(coeff), degree(deg), next(nullptr) {}
+    Term(double coefficient, int degree) : coeff(coefficient), deg(degree), next(nullptr) {}
 };
 
 class Polynomial
@@ -20,163 +20,176 @@ class Polynomial
 private:
     Term* head;
 
-    void insertTerm(double coefficient, int degree)
+    void insertTerm(double coefficient, int degree);
+
+public:
+    Polynomial();
+    ~Polynomial();
+    void readFromFile(const string& filename);
+    Polynomial add(const Polynomial& other) const;
+    Polynomial multiply(const Polynomial& other) const;
+    double evaluate(double x) const;
+    void print() const;
+};
+
+
+Polynomial::Polynomial() : head(nullptr) {}
+
+Polynomial::~Polynomial()
+{
+    while (head)
     {
-        if (coefficient == 0) return;
-        Term* newTerm = new Term(coefficient, degree);
-        if (!head || head->degree > degree)
+        Term* temp = head;
+        head = head->next;
+        delete temp;
+    }
+}
+
+void Polynomial::insertTerm(double coefficient, int degree)
+{
+    if (coefficient == 0) return;
+    Term* newTerm = new Term(coefficient, degree);
+    if (!head || head->deg > degree)
+    {
+        newTerm->next = head;
+        head = newTerm;
+        return;
+    }
+    Term* current = head;
+    while (current->next && current->next->deg < degree)
+    {
+        current = current->next;
+    }
+    if (current->deg == degree)
+    {
+        current->coeff += coefficient;
+        delete newTerm;
+    }
+    else
+    {
+        newTerm->next = current->next;
+        current->next = newTerm;
+    }
+}
+
+void Polynomial::readFromFile(const string& filename)
+{
+    ifstream file(filename);
+    if (!file)
+    {
+        cerr << "Unable to open file " << filename << endl;
+        return;
+    }
+    string line;
+    while (getline(file, line))
+    {
+        istringstream iss(line);
+        double coefficient;
+        char x, caret;
+        int degree;
+        while (iss >> coefficient >> x >> caret >> degree)
         {
-            newTerm->next = head;
-            head = newTerm;
-            return;
+            insertTerm(coefficient, degree);
         }
-        Term* current = head;
-        while (current->next && current->next->degree < degree)
+    }
+    file.close();
+}
+
+Polynomial Polynomial::add(const Polynomial& other) const
+{
+    Polynomial result;
+    Term* p1 = head;
+    Term* p2 = other.head;
+    while (p1 || p2)
+    {
+        if (p1 && (!p2 || p1->deg < p2->deg))
         {
-            current = current->next;
+            result.insertTerm(p1->coeff, p1->deg);
+            p1 = p1->next;
         }
-        if (current->degree == degree)
+        else if (p2 && (!p1 || p2->deg < p1->deg))
         {
-            current->coefficient += coefficient;
-            delete newTerm;
+            result.insertTerm(p2->coeff, p2->deg);
+            p2 = p2->next;
         }
         else
         {
-            newTerm->next = current->next;
-            current->next = newTerm;
+            result.insertTerm(p1->coeff + p2->coeff, p1->deg);
+            p1 = p1->next;
+            p2 = p2->next;
         }
     }
+    return result;
+}
 
-public:
-    Polynomial() : head(nullptr) {}
-
-    ~Polynomial()
+Polynomial Polynomial::multiply(const Polynomial& other) const
+{
+    Polynomial result;
+    for (Term* p1 = head; p1; p1 = p1->next)
     {
-        while (head)
+        for (Term* p2 = other.head; p2; p2 = p2->next)
         {
-            Term* temp = head;
-            head = head->next;
-            delete temp;
+            result.insertTerm(p1->coeff * p2->coeff, p1->deg + p2->deg);
         }
     }
+    return result;
+}
 
-    void readFromFile(const string& filename)
+double Polynomial::evaluate(double x) const
+{
+    double result = 0.0;
+    for (Term* current = head; current; current = current->next)
     {
-        ifstream file(filename);
-        if (!file)
-        {
-            cerr << "Unable to open file " << filename << endl;
-            return;
-        }
-        string line;
-        while (getline(file, line))
-        {
-            istringstream iss(line);
-            double coefficient;
-            char x, caret;
-            int degree;
-            while (iss >> coefficient >> x >> caret >> degree)
-            {
-                insertTerm(coefficient, degree);
-            }
-        }
-        file.close();
+        result += current->coeff * pow(x, current->deg);
     }
+    return result;
+}
 
-    Polynomial add(const Polynomial& other) const
+void Polynomial::print() const
+{
+    for (Term* current = head; current; current = current->next)
     {
-        Polynomial result;
-        Term* p1 = head;
-        Term* p2 = other.head;
-        while (p1 || p2)
-        {
-            if (p1 && (!p2 || p1->degree < p2->degree))
-            {
-                result.insertTerm(p1->coefficient, p1->degree);
-                p1 = p1->next;
-            }
-            else if (p2 && (!p1 || p2->degree < p1->degree))
-            {
-                result.insertTerm(p2->coefficient, p2->degree);
-                p2 = p2->next;
-            }
-            else
-            {
-                result.insertTerm(p1->coefficient + p2->coefficient, p1->degree);
-                p1 = p1->next;
-                p2 = p2->next;
-            }
-        }
-        return result;
+        cout << current->coeff << "x^" << current->deg;
+        if (current->next) cout << " + ";
     }
-
-    Polynomial multiply(const Polynomial& other) const
-    {
-        Polynomial result;
-        for (Term* p1 = head; p1; p1 = p1->next)
-        {
-            for (Term* p2 = other.head; p2; p2 = p2->next)
-            {
-                result.insertTerm(p1->coefficient * p2->coefficient, p1->degree + p2->degree);
-            }
-        }
-        return result;
-    }
-
-    double evaluate(double x) const
-    {
-        double result = 0.0;
-        for (Term* current = head; current; current = current->next)
-        {
-            result += current->coefficient * pow(x, current->degree);
-        }
-        return result;
-    }
-
-    void print() const {
-        for (Term* current = head; current; current = current->next)
-        {
-            cout << current->coefficient << "x^" << current->degree;
-            if (current->next) cout << " + ";
-        }
-        cout << endl;
-    }
-};
+    cout << endl;
+}
 
 int main()
 {
-    Polynomial p1, p2;
-    char choice;
-    p1.readFromFile("pol1.txt");
-    p2.readFromFile("pol2.txt");
+    Polynomial poly1, poly2;
+    char option;
+    poly1.readFromFile("pol1.txt");
+    poly2.readFromFile("pol2.txt");
 
-    cout << "Polynomial 1: ";
-    p1.print();
+    cout << "\nPolynomial 1: ";
+    poly1.print();
     cout << "Polynomial 2: ";
-    p2.print();
-    cout << "1) Add the polynomials" << endl;
+    poly2.print();
+    cout << "\n1) Add the polynomials" << endl;
     cout << "2) Multiply the polynomials" << endl;
-    cout << "3) Evaluate Polynomial 1" << endl;
-    cin >> choice;
+    cout << "3) Evaluate Polynomial 1 at a specific value of x" << endl; // Added option 3
 
-    if (choice == '1')
+    cin >> option;
+
+    if (option == '1')
     {
-        Polynomial sum = p1.add(p2);
+        Polynomial sum = poly1.add(poly2);
         cout << "Sum: ";
         sum.print();
     }
-    else if (choice == '2')
+    else if (option == '2')
     {
-        Polynomial product = p1.multiply(p2);
+        Polynomial product = poly1.multiply(poly2);
         cout << "Product: ";
         product.print();
     }
-    else if (choice == '3')
+    else if (option == '3') 
     {
         double x;
         cout << "Enter the value of x: ";
         cin >> x;
-        cout << "Evaluation of Polynomial 1 at x = " << x << ": " << p1.evaluate(x) << endl;
+        cout << "Evaluation of Polynomial 1 at x = " << x << ": " << poly1.evaluate(x) << endl;
     }
     else
     {
