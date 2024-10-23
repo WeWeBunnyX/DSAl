@@ -8,8 +8,8 @@ using namespace std;
 
 struct Term
 {
-    double coeff;  // Changed from 'coefficient' to 'coeff'
-    int deg;       // Changed from 'degree' to 'deg'
+    double coeff;  
+    int deg;      
     Term* next;
 
     Term(double coefficient, int degree) : coeff(coefficient), deg(degree), next(nullptr) {}
