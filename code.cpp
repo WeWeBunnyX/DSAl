@@ -1,3 +1,5 @@
+
+			         DSA Lab 7: Open Ended
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -8,8 +10,8 @@ using namespace std;
 
 struct Term
 {
-    double coeff;  
-    int deg;      
+    double coeff;
+    int deg;
     Term* next;
 
     Term(double coefficient, int degree) : coeff(coefficient), deg(degree), next(nullptr) {}
@@ -184,12 +186,12 @@ int main()
         cout << "Product: ";
         product.print();
     }
-    else if (option == '3') 
+    else if (option == '3')
     {
         double x;
         cout << "Enter the value of x: ";
         cin >> x;
-        cout << "Evaluation of Polynomial 1 at x = " << x << ": " << poly1.evaluate(x) << endl;
+        cout << "Evaluation of Polynomial  at x = " << x << ": " << poly1.evaluate(x) << endl;
     }
     else
     {
@@ -198,3 +200,4 @@ int main()
 
     return 0;
 }
+
